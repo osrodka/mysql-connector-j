@@ -51,6 +51,7 @@ public class NativeCapabilities implements ServerCapabilities {
     private int statusFlags = 0;
     private int authPluginDataLength = 0;
     private boolean serverHasFracSecsSupport = true;
+    private static String OVERRIDE_MYSQL_SERVER_VERSION = System.getenv("MYSQL_OVERRIDE_SERVER_VERSION");
 
     public NativeCapabilities(NativePacketPayload initialHandshakePacket) {
         this.initialHandshakePacket = initialHandshakePacket;
@@ -59,7 +60,12 @@ public class NativeCapabilities implements ServerCapabilities {
         this.protocolVersion = (byte) initialHandshakePacket.readInteger(IntegerDataType.INT1);
 
         try {
-            this.serverVersion = ServerVersion.parseVersion(initialHandshakePacket.readString(StringSelfDataType.STRING_TERM, "ASCII"));
+            // override mysql azure gateway version
+            if (OVERRIDE_MYSQL_SERVER_VERSION.isEmpty()) {
+                this.serverVersion = ServerVersion.parseVersion(initialHandshakePacket.readString(StringSelfDataType.STRING_TERM, "ASCII"));
+            } else {
+                this.serverVersion = ServerVersion.parseVersion(OVERRIDE_MYSQL_SERVER_VERSION);
+            }
 
             // read connection id
             this.threadId = initialHandshakePacket.readInteger(IntegerDataType.INT4);
